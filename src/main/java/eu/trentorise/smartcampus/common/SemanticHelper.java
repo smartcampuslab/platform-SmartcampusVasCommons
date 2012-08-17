@@ -29,32 +29,47 @@ public class SemanticHelper {
 	private static final String ATTR_SEMANTIC_TAG = "semantic";
 	private static final String ATTR_RELATION = "entity";
 	
-	private static EntityBase scCommunityEntityBase = null;
-	private static Long scCommunityActorId = null;
+	private EntityBase scCommunityEntityBase = null;
+	private Long scCommunityActorId = null;
 	
-	private static Map<String, EntityType> cachedTypeMap = new HashMap<String, EntityType>();
-	private static Log logger = LogFactory.getLog(SemanticHelper.class);
+	private Map<String, EntityType> cachedTypeMap = new HashMap<String, EntityType>();
+	private Log logger = LogFactory.getLog(getClass());
+
+	private SCWebApiClient client;
 	
-	public static void init(SCWebApiClient client) throws WebApiException {
-		getSCCommunityEntityBase(client);
+	private static SemanticHelper instance = null;
+	
+	public SemanticHelper(SCWebApiClient client) throws WebApiException {
+		super();
+		this.client = client;
+	}
+
+	private static SemanticHelper getInstance(SCWebApiClient client) throws WebApiException {
+		if (instance == null) instance = new SemanticHelper(client);
+		return instance;
 	}
 	
 	public static EntityBase getSCCommunityEntityBase(SCWebApiClient client) throws WebApiException {
-		if (scCommunityEntityBase != null) return scCommunityEntityBase;
-		Community community = client.readCommunity(Constants.SMARTCAMPUS_COMMUNITY);
-		if (community == null) {
-			throw new WebApiException("SC community does not exist");
+		return getInstance(client).getSCCommunityEntityBase();
+	}
+	private EntityBase getSCCommunityEntityBase() throws WebApiException {
+		synchronized (client) {
+			if (scCommunityEntityBase != null) return scCommunityEntityBase;
+			Community community = client.readCommunity(Constants.SMARTCAMPUS_COMMUNITY);
+			if (community == null) {
+				throw new WebApiException("SC community does not exist");
+			}
+			
+			scCommunityEntityBase = client.readEntityBase(community.getEntityBaseId());
+			if (scCommunityEntityBase == null) {
+				throw new WebApiException("SC community entity base does not exist");
+			}
+			scCommunityActorId = community.getId();
+			return scCommunityEntityBase;
 		}
-		
-		scCommunityEntityBase = client.readEntityBase(community.getEntityBaseId());
-		if (scCommunityEntityBase == null) {
-			throw new WebApiException("SC community entity base does not exist");
-		}
-		scCommunityActorId = community.getId();
-		return scCommunityEntityBase;
 	}
 
-	private static EntityBase getEntityBase(SCWebApiClient client, Long actorId) throws WebApiException {
+	private EntityBase getEntityBase(SCWebApiClient client, Long actorId) throws WebApiException {
 		if (actorId == scCommunityActorId) return scCommunityEntityBase;
 		Entity actor = client.readEntity(actorId, null);
 		if (actor == null) {
@@ -62,49 +77,73 @@ public class SemanticHelper {
 		}
 		return actor.getEntityBase();
 	}
+	
 	public static Entity createSCEntity(SCWebApiClient client, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		EntityBase eb = getSCCommunityEntityBase(client);
-		EntityType et = getEntityType(client, eb, type);
-		Entity entity = new Entity();
-		entity.setEntityBase(eb);
-		entity.setEtype(et);
-
-		updateAttributes(client, name, description, concepts, relations, entity);
-		long eid = client.create(entity);
-		entity = client.readEntity(eid, null);
-		return entity;
+		return getInstance(client).createSCEntity(type, name, description, concepts, relations);
+	}
+	private Entity createSCEntity(String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+		synchronized (client) {
+			EntityBase eb = getSCCommunityEntityBase(client);
+			EntityType et = getEntityType(client, eb, type);
+			Entity entity = new Entity();
+			entity.setEntityBase(eb);
+			entity.setEtype(et);
+			updateAttributes(client, name, description, concepts, relations,
+					entity);
+			long eid = client.create(entity);
+			entity = client.readEntity(eid, null);
+			return entity;
+		}
 	}
 	
 	public static Entity createEntity(SCWebApiClient client, Long actorId, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		EntityBase eb = getEntityBase(client, actorId);
-		EntityType et = getEntityType(client, eb, type);
-		Entity entity = new Entity();
-		entity.setEntityBase(eb);
-		entity.setEtype(et);
-
-		updateAttributes(client, name, description, concepts, relations, entity);
-		long eid = client.create(entity);
-		entity = client.readEntity(eid, null);
-		return entity;
+		return getInstance(client).createEntity(actorId, type, name, description, concepts, relations);
+	}
+	private Entity createEntity(Long actorId, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+		synchronized (client) {
+			EntityBase eb = getEntityBase(client, actorId);
+			EntityType et = getEntityType(client, eb, type);
+			Entity entity = new Entity();
+			entity.setEntityBase(eb);
+			entity.setEtype(et);
+			updateAttributes(client, name, description, concepts, relations,
+					entity);
+			long eid = client.create(entity);
+			entity = client.readEntity(eid, null);
+			return entity;
+		}
 	}
 
 	public static Entity updateEntity(SCWebApiClient client, Long id, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		Entity entity = client.readEntity(id, null);
-		if (entity == null) {
-			throw new WebApiException("Entity with id " + id + " does not exist");
+		return getInstance(client).updateEntity(id, name, description, concepts, relations);
+	}
+	private Entity updateEntity(Long id, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+		synchronized (client) {
+			Entity entity = client.readEntity(id, null);
+			if (entity == null) {
+				throw new WebApiException("Entity with id " + id
+						+ " does not exist");
+			}
+			entity.setEtype(getEntityType(client, entity.getEntityBase(),
+					entity.getEtype().getName()));
+			updateAttributes(client, name, description, concepts, relations,
+					entity);
+			client.updateEntity(entity);
+			entity = client.readEntity(id, null);
+			return entity;
 		}
-		entity.setEtype(getEntityType(client, entity.getEntityBase(), entity.getEtype().getName()));
-		updateAttributes(client, name, description, concepts, relations, entity);
-		client.updateEntity(entity);
-		entity = client.readEntity(id, null);
-		return entity;
 	}
 
 	public static boolean deleteEntity(SCWebApiClient client, Long id) throws WebApiException {
-		return client.deleteEntity(id);
+		return getInstance(client).deleteEntity(id);
+	}
+	private boolean deleteEntity(Long id) throws WebApiException {
+		synchronized (client) {
+			return client.deleteEntity(id);
+		}
 	}
 
-	private static void updateAttributes(SCWebApiClient client, String name, String description, List<Concept> concepts, List<Long> relations, Entity entity) throws WebApiException {
+	private void updateAttributes(SCWebApiClient client, String name, String description, List<Concept> concepts, List<Long> relations, Entity entity) throws WebApiException {
 		List<Attribute> attrs = new ArrayList<Attribute>();
 		
 		// name attribute
@@ -140,7 +179,7 @@ public class SemanticHelper {
 		entity.setAttributes(attrs);
 	}
 
-	private static Attribute createRelationAttribute(SCWebApiClient client, String aName, Long[] array, EntityType et, EntityBase eb) {
+	private Attribute createRelationAttribute(SCWebApiClient client, String aName, Long[] array, EntityType et, EntityBase eb) {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
@@ -162,7 +201,7 @@ public class SemanticHelper {
 		return a;
 	}
 
-	private static Attribute createSemanticAttribute(SCWebApiClient client, String aName, String[] text, Long[] array, EntityType et, EntityBase eb) throws WebApiException {
+	private Attribute createSemanticAttribute(SCWebApiClient client, String aName, String[] text, Long[] array, EntityType et, EntityBase eb) throws WebApiException {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
@@ -197,7 +236,7 @@ public class SemanticHelper {
 		return a;
 	}
 
-	private static Attribute createTextAttribute(String aName, String[] values, EntityType et) {
+	private Attribute createTextAttribute(String aName, String[] values, EntityType et) {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
@@ -211,7 +250,7 @@ public class SemanticHelper {
 		return a;
 	}
 	
-	private static EntityType getEntityType(SCWebApiClient client, EntityBase eb, String type) throws WebApiException {
+	private EntityType getEntityType(SCWebApiClient client, EntityBase eb, String type) throws WebApiException {
 		EntityType et = cachedTypeMap .get(type);
 		if (et == null) {
 			et = client.readEntityType(type, eb.getKbLabel());

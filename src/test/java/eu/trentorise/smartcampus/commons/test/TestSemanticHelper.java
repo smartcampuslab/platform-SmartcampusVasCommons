@@ -41,7 +41,7 @@ public class TestSemanticHelper {
 
 	@Test
 	public void testCreateSCEntityWOTags() throws WebApiException, JSONException {
-		Entity e = SemanticHelper.createSCEntity(client, "event", "some event", null, null, null);
+		Entity e = SemanticHelper.createSCEntity(client, "event", "Mensa via Zanella", "Posti liberi al 2012_08_16 05.45.00 : 526", null, null);
 		System.err.println(e.toString());
 		
 		boolean result = SemanticHelper.deleteEntity(client, e.getId());
@@ -80,13 +80,19 @@ public class TestSemanticHelper {
 		}
 	}
 	
-	@Test
-	public void testCleanEB() throws WebApiException {
+	public static void main(String[] args) throws WebApiException {
+		client = SCWebApiClient.getInstance(Locale.ENGLISH, SE_HOST, SE_PORT);
 		EntityBase eb = SemanticHelper.getSCCommunityEntityBase(client);
-		System.err.println(client.readEntity(682L, null));
+		System.err.println(client.readEntity(689L, null));
 		
 		List<Entity> list = client.readEntities("event", eb.getLabel(), null);
 		for (Entity e : list) {
+			System.err.println(client.readEntity(e.getId(), null));
+			client.deleteEntity(e.getId());
+		}
+		list = client.readEntities("location", eb.getLabel(), null);
+		for (Entity e : list) {
+			System.err.println(client.readEntity(e.getId(), null));
 			client.deleteEntity(e.getId());
 		}
 		System.err.println(client.readEntityBases());
