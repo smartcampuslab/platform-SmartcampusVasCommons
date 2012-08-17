@@ -90,6 +90,9 @@ public class SemanticHelper {
 
 	public static Entity updateEntity(SCWebApiClient client, Long id, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
 		Entity entity = client.readEntity(id, null);
+		if (entity == null) {
+			throw new WebApiException("Entity with id " + id + " does not exist");
+		}
 		entity.setEtype(getEntityType(client, entity.getEntityBase(), entity.getEtype().getName()));
 		updateAttributes(client, name, description, concepts, relations, entity);
 		client.updateEntity(entity);

@@ -3,9 +3,11 @@ package eu.trentorise.smartcampus.commons.test;
 import it.unitn.disi.sweb.webapi.client.WebApiException;
 import it.unitn.disi.sweb.webapi.client.smartcampus.SCWebApiClient;
 import it.unitn.disi.sweb.webapi.model.entity.Entity;
+import it.unitn.disi.sweb.webapi.model.entity.EntityBase;
 import it.unitn.disi.sweb.webapi.model.ss.Word;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import org.json.JSONException;
@@ -37,6 +39,19 @@ public class TestSemanticHelper {
 		System.err.println(result);
 	}
 
+	@Test
+	public void testCreateSCEntityWOTags() throws WebApiException, JSONException {
+		Entity e = SemanticHelper.createSCEntity(client, "event", "some event", null, null, null);
+		System.err.println(e.toString());
+		
+		boolean result = SemanticHelper.deleteEntity(client, e.getId());
+		System.err.println(result);
+		
+		boolean deleteResult = SemanticHelper.deleteEntity(client, e.getId());
+		System.err.println(deleteResult);
+
+	}
+
 	private Entity create() throws WebApiException {
 		Concept textTag = new Concept();
 		textTag.setName("java text");
@@ -65,4 +80,16 @@ public class TestSemanticHelper {
 		}
 	}
 	
+	@Test
+	public void testCleanEB() throws WebApiException {
+		EntityBase eb = SemanticHelper.getSCCommunityEntityBase(client);
+		System.err.println(client.readEntity(682L, null));
+		
+		List<Entity> list = client.readEntities("event", eb.getLabel(), null);
+		for (Entity e : list) {
+			client.deleteEntity(e.getId());
+		}
+		System.err.println(client.readEntityBases());
+		System.err.println(client.readCommunities());
+	}
 }
