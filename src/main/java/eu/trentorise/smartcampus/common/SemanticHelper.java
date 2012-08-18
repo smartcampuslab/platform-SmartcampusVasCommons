@@ -8,6 +8,8 @@ import it.unitn.disi.sweb.webapi.model.entity.Entity;
 import it.unitn.disi.sweb.webapi.model.entity.EntityBase;
 import it.unitn.disi.sweb.webapi.model.entity.EntityType;
 import it.unitn.disi.sweb.webapi.model.entity.Value;
+import it.unitn.disi.sweb.webapi.model.smartcampus.ac.Operation;
+import it.unitn.disi.sweb.webapi.model.smartcampus.livetopics.LiveTopicSource;
 import it.unitn.disi.sweb.webapi.model.smartcampus.social.Community;
 import it.unitn.disi.sweb.webapi.model.ss.SemanticString;
 import it.unitn.disi.sweb.webapi.model.ss.Token;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +96,9 @@ public class SemanticHelper {
 			updateAttributes(client, name, description, concepts, relations,
 					entity);
 			long eid = client.create(entity);
+			ShareVisibility visibility = new ShareVisibility();
+			visibility.setAllUsers(true);
+			shareEntity(eid, scCommunityActorId, visibility);
 			entity = client.readEntity(eid, null);
 			return entity;
 		}
@@ -285,4 +291,103 @@ public class SemanticHelper {
 			return Collections.emptyList();
 		}
 	}
+
+	public static void unshareEntity(SCWebApiClient client, Long entityId, Long ownerId) throws WebApiException {
+		getInstance(client).unshareEntity(entityId, ownerId);
+	}
+	
+	private void unshareEntity(Long entityId, Long ownerId) throws WebApiException {
+		synchronized (client) {
+			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
+			client.updateAssignments(entityId, Operation.READ, ownerId, clearSource(assignments));
+		}
+	}
+
+	public static void unshareEntityWith(SCWebApiClient client, Long entityId, Long ownerId, Long actorId) throws WebApiException {
+		getInstance(client).unshareEntityWith(entityId, ownerId, actorId);
+	}
+	
+	private void unshareEntityWith(Long entityId, Long ownerId, Long actorId) throws WebApiException {
+		synchronized (client) {
+			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
+			if (assignments != null && assignments.getUserIds() != null) {
+				assignments.getUserIds().remove(actorId);
+				client.updateAssignments(entityId, Operation.READ, ownerId, assignments);
+			}
+		}
+	}
+	
+	private LiveTopicSource clearSource(LiveTopicSource src) {
+		src.setAllCommunities(false);
+		src.setAllKnownCommunities(false);
+		src.setAllKnownUsers(false);
+		src.setAllUsers(false);
+
+		src.setCommunityIds(Collections.<Long> emptySet());
+		src.setGroupIds(Collections.<Long> emptySet());
+		src.setUserIds(Collections.<Long> emptySet());
+
+		return src;
+	}
+
+	public static void shareEntity(SCWebApiClient client, Long entityId, Long ownerId, ShareVisibility visibility) throws WebApiException {
+		getInstance(client).shareEntity(entityId, ownerId, visibility);
+	}
+	
+	private void shareEntity(Long entityId, Long ownerId, ShareVisibility visibility) throws WebApiException {
+		synchronized (client) {
+			LiveTopicSource assignments = client.readAssignments(entityId,
+					Operation.READ, ownerId);
+			client.updateAssignments(entityId, Operation.READ, ownerId,
+					updateSource(assignments, visibility));
+		}
+	}
+
+	public static void shareEntityWith(SCWebApiClient client, Long entityId, Long ownerId, Long actorId) throws WebApiException {
+		getInstance(client).shareEntityWith(entityId, ownerId, actorId);
+	}
+	
+	private void shareEntityWith(Long entityId, Long ownerId, Long actorId) throws WebApiException {
+		synchronized (client) {
+			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
+			if (assignments != null) {
+				if (assignments.getUserIds() == null) {
+					assignments.setUserIds(new HashSet<Long>());
+				}
+				assignments.getUserIds().add(actorId);
+			}
+
+			client.updateAssignments(entityId, Operation.READ, ownerId, assignments);
+		}
+	}
+
+	private LiveTopicSource updateSource(LiveTopicSource src, ShareVisibility sv) {
+		src.setAllCommunities(sv.isAllCommunities());
+		src.setAllKnownCommunities(sv.isAllKnownCommunities());
+		src.setAllKnownUsers(sv.isAllKnownUsers());
+		if (sv.getGroupIds() != null) {
+			for (Long id : sv.getGroupIds()) {
+				if (!src.getGroupIds().contains(id)) {
+					src.getGroupIds().add(id);
+				}
+			}
+		}
+		if (sv.getCommunityIds() != null) {
+			for (Long id : sv.getCommunityIds()) {
+				if (!src.getCommunityIds().contains(id)) {
+					src.getCommunityIds().add(id);
+				}
+			}
+		}
+		if (sv.getUserIds() != null) {
+			for (Long id : sv.getUserIds()) {
+				if (!src.getUserIds().contains(id)) {
+					src.getUserIds().add(id);
+				}
+			}
+		}
+
+		return src;
+	}
+
 }
