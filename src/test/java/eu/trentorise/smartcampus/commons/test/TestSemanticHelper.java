@@ -80,6 +80,11 @@ public class TestSemanticHelper {
 		}
 	}
 	
+	@Test
+	public void testSuggestions() throws WebApiException {
+		System.err.println(SemanticHelper.getSuggestions(client, "test", 10));
+	}
+	
 	public static void main(String[] args) throws WebApiException {
 		client = SCWebApiClient.getInstance(Locale.ENGLISH, SE_HOST, SE_PORT);
 		EntityBase eb = SemanticHelper.getSCCommunityEntityBase(client);

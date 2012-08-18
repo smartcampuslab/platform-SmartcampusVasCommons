@@ -11,9 +11,11 @@ import it.unitn.disi.sweb.webapi.model.entity.Value;
 import it.unitn.disi.sweb.webapi.model.smartcampus.social.Community;
 import it.unitn.disi.sweb.webapi.model.ss.SemanticString;
 import it.unitn.disi.sweb.webapi.model.ss.Token;
+import it.unitn.disi.sweb.webapi.model.ss.Word;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -257,5 +259,30 @@ public class SemanticHelper {
 			cachedTypeMap.put(type, et);
 		}
 		return et;
+	}
+	
+	public static List<Concept> getSuggestions(SCWebApiClient client, String prefix, int max) throws WebApiException {
+		return getInstance(client).getSuggestions(prefix, max);
+	}
+
+	private List<Concept> getSuggestions(String prefix, int max) throws WebApiException {
+		synchronized (client) {
+			List<Word> list = client.readConceptsByWordPrefix(prefix, max);
+			if (list != null) {
+				List<Concept> result = new ArrayList<Concept>();
+				for (Word w : list) {
+					for (it.unitn.disi.sweb.webapi.model.ss.Concept c : w.getConcepts()) {
+						Concept nc = new Concept();
+						nc.setName(w.getLemma());
+						nc.setDescription(c.getDescription());
+						nc.setSummary(c.getSummary());
+						nc.setId(c.getId());
+						result.add(nc);
+					}
+				}
+				return result;
+			}
+			return Collections.emptyList();
+		}
 	}
 }
