@@ -33,60 +33,77 @@ public class SemanticHelper {
 	private static final String ATTR_TEXT_TAG = "text";
 	private static final String ATTR_SEMANTIC_TAG = "semantic";
 	private static final String ATTR_RELATION = "entity";
-	
+
 	private EntityBase scCommunityEntityBase = null;
 	private Long scCommunityActorId = null;
-	
+
 	private Map<String, EntityType> cachedTypeMap = new HashMap<String, EntityType>();
 	private Log logger = LogFactory.getLog(getClass());
 
 	private SCWebApiClient client;
-	
+
 	private static SemanticHelper instance = null;
-	
+
 	public SemanticHelper(SCWebApiClient client) throws WebApiException {
 		super();
 		this.client = client;
 	}
 
-	private static SemanticHelper getInstance(SCWebApiClient client) throws WebApiException {
-		if (instance == null) instance = new SemanticHelper(client);
+	private static SemanticHelper getInstance(SCWebApiClient client)
+			throws WebApiException {
+		if (instance == null)
+			instance = new SemanticHelper(client);
 		return instance;
 	}
-	
-	public static EntityBase getSCCommunityEntityBase(SCWebApiClient client) throws WebApiException {
+
+	public static EntityBase getSCCommunityEntityBase(SCWebApiClient client)
+			throws WebApiException {
 		return getInstance(client).getSCCommunityEntityBase();
 	}
+
 	private EntityBase getSCCommunityEntityBase() throws WebApiException {
 		synchronized (client) {
-			if (scCommunityEntityBase != null) return scCommunityEntityBase;
-			Community community = client.readCommunity(Constants.SMARTCAMPUS_COMMUNITY);
+			if (scCommunityEntityBase != null)
+				return scCommunityEntityBase;
+			Community community = client
+					.readCommunity(Constants.SMARTCAMPUS_COMMUNITY);
 			if (community == null) {
 				throw new WebApiException("SC community does not exist");
 			}
-			
-			scCommunityEntityBase = client.readEntityBase(community.getEntityBaseId());
+
+			scCommunityEntityBase = client.readEntityBase(community
+					.getEntityBaseId());
 			if (scCommunityEntityBase == null) {
-				throw new WebApiException("SC community entity base does not exist");
+				throw new WebApiException(
+						"SC community entity base does not exist");
 			}
 			scCommunityActorId = community.getId();
 			return scCommunityEntityBase;
 		}
 	}
 
-	private EntityBase getEntityBase(SCWebApiClient client, Long actorId) throws WebApiException {
-		if (actorId == scCommunityActorId) return scCommunityEntityBase;
+	private EntityBase getEntityBase(SCWebApiClient client, Long actorId)
+			throws WebApiException {
+		if (actorId == scCommunityActorId)
+			return scCommunityEntityBase;
 		Entity actor = client.readEntity(actorId, null);
 		if (actor == null) {
-			throw new WebApiException("Actor with id "+actorId+" is not found.");
+			throw new WebApiException("Actor with id " + actorId
+					+ " is not found.");
 		}
 		return actor.getEntityBase();
 	}
-	
-	public static Entity createSCEntity(SCWebApiClient client, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		return getInstance(client).createSCEntity(type, name, description, concepts, relations);
+
+	public static Entity createSCEntity(SCWebApiClient client, String type,
+			String name, String description, List<Concept> concepts,
+			List<Long> relations) throws WebApiException {
+		return getInstance(client).createSCEntity(type, name, description,
+				concepts, relations);
 	}
-	private Entity createSCEntity(String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+
+	private Entity createSCEntity(String type, String name, String description,
+			List<Concept> concepts, List<Long> relations)
+			throws WebApiException {
 		synchronized (client) {
 			EntityBase eb = getSCCommunityEntityBase(client);
 			EntityType et = getEntityType(client, eb, type);
@@ -103,11 +120,18 @@ public class SemanticHelper {
 			return entity;
 		}
 	}
-	
-	public static Entity createEntity(SCWebApiClient client, Long actorId, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		return getInstance(client).createEntity(actorId, type, name, description, concepts, relations);
+
+	public static Entity createEntity(SCWebApiClient client, Long actorId,
+			String type, String name, String description,
+			List<Concept> concepts, List<Long> relations)
+			throws WebApiException {
+		return getInstance(client).createEntity(actorId, type, name,
+				description, concepts, relations);
 	}
-	private Entity createEntity(Long actorId, String type, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+
+	private Entity createEntity(Long actorId, String type, String name,
+			String description, List<Concept> concepts, List<Long> relations)
+			throws WebApiException {
 		synchronized (client) {
 			EntityBase eb = getEntityBase(client, actorId);
 			EntityType et = getEntityType(client, eb, type);
@@ -122,10 +146,16 @@ public class SemanticHelper {
 		}
 	}
 
-	public static Entity updateEntity(SCWebApiClient client, Long id, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
-		return getInstance(client).updateEntity(id, name, description, concepts, relations);
+	public static Entity updateEntity(SCWebApiClient client, Long id,
+			String name, String description, List<Concept> concepts,
+			List<Long> relations) throws WebApiException {
+		return getInstance(client).updateEntity(id, name, description,
+				concepts, relations);
 	}
-	private Entity updateEntity(Long id, String name, String description, List<Concept> concepts, List<Long> relations) throws WebApiException {
+
+	private Entity updateEntity(Long id, String name, String description,
+			List<Concept> concepts, List<Long> relations)
+			throws WebApiException {
 		synchronized (client) {
 			Entity entity = client.readEntity(id, null);
 			if (entity == null) {
@@ -142,52 +172,68 @@ public class SemanticHelper {
 		}
 	}
 
-	public static boolean deleteEntity(SCWebApiClient client, Long id) throws WebApiException {
+	public static boolean deleteEntity(SCWebApiClient client, Long id)
+			throws WebApiException {
 		return getInstance(client).deleteEntity(id);
 	}
+
 	private boolean deleteEntity(Long id) throws WebApiException {
 		synchronized (client) {
 			return client.deleteEntity(id);
 		}
 	}
 
-	private void updateAttributes(SCWebApiClient client, String name, String description, List<Concept> concepts, List<Long> relations, Entity entity) throws WebApiException {
+	private void updateAttributes(SCWebApiClient client, String name,
+			String description, List<Concept> concepts, List<Long> relations,
+			Entity entity) throws WebApiException {
 		List<Attribute> attrs = new ArrayList<Attribute>();
-		
+
 		// name attribute
 		if (name != null) {
-			attrs.add(createTextAttribute(ATTR_NAME, new String[]{name}, entity.getEtype()));
+			attrs.add(createTextAttribute(ATTR_NAME, new String[] { name },
+					entity.getEtype()));
 		}
 		// description attribute
 		if (description != null) {
-			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION, new String[]{description}, null, entity.getEtype(), entity.getEntityBase());
+			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
+					new String[] { description }, null, entity.getEtype(),
+					entity.getEntityBase());
 			attrs.add(a);
 		}
 		List<String> textTags = new ArrayList<String>();
 		List<Long> semanticTags = new ArrayList<Long>();
 		if (concepts != null) {
 			for (Concept c : concepts) {
-				if (c.getId() == null || c.getId() <= 0) textTags.add(c.getName());
-				else semanticTags.add(c.getId());
+				if (c.getId() == null || c.getId() <= 0)
+					textTags.add(c.getName());
+				else
+					semanticTags.add(c.getId());
 			}
 		}
 		// text tags attribute
 		if (!textTags.isEmpty()) {
-			attrs.add(createTextAttribute(ATTR_TEXT_TAG, textTags.toArray(new String[textTags.size()]), entity.getEtype()));
+			attrs.add(createTextAttribute(ATTR_TEXT_TAG,
+					textTags.toArray(new String[textTags.size()]),
+					entity.getEtype()));
 		}
 		// semantic tags attribute
 		if (!semanticTags.isEmpty()) {
-			Attribute a = createSemanticAttribute(client, ATTR_SEMANTIC_TAG, null, semanticTags.toArray(new Long[semanticTags.size()]), entity.getEtype(), entity.getEntityBase()); 
+			Attribute a = createSemanticAttribute(client, ATTR_SEMANTIC_TAG,
+					null, semanticTags.toArray(new Long[semanticTags.size()]),
+					entity.getEtype(), entity.getEntityBase());
 			attrs.add(a);
 		}
 		if (relations != null && relations.size() > 0) {
-			attrs.add(createRelationAttribute(client, ATTR_RELATION, relations.toArray(new Long[relations.size()]), entity.getEtype(), entity.getEntityBase()));
+			attrs.add(createRelationAttribute(client, ATTR_RELATION,
+					relations.toArray(new Long[relations.size()]),
+					entity.getEtype(), entity.getEntityBase()));
 		}
-		
+
 		entity.setAttributes(attrs);
 	}
 
-	private Attribute createRelationAttribute(SCWebApiClient client, String aName, Long[] array, EntityType et, EntityBase eb) {
+	private Attribute createRelationAttribute(SCWebApiClient client,
+			String aName, Long[] array, EntityType et, EntityBase eb) {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
@@ -196,7 +242,8 @@ public class SemanticHelper {
 			try {
 				related = client.readEntity(s, null);
 			} catch (Exception e) {
-				logger.error("Failed to find entity with id "+s+": "+e.getMessage());
+				logger.error("Failed to find entity with id " + s + ": "
+						+ e.getMessage());
 				continue;
 			}
 			Value v = new Value();
@@ -209,13 +256,18 @@ public class SemanticHelper {
 		return a;
 	}
 
-	private Attribute createSemanticAttribute(SCWebApiClient client, String aName, String[] text, Long[] array, EntityType et, EntityBase eb) throws WebApiException {
+	private Attribute createSemanticAttribute(SCWebApiClient client,
+			String aName, String[] text, Long[] array, EntityType et,
+			EntityBase eb) throws WebApiException {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
-		if (text == null && array == null) return null;
-		if (text == null) text = new String[array.length];
-		else if (array == null) array = new Long[text.length];
+		if (text == null && array == null)
+			return null;
+		if (text == null)
+			text = new String[array.length];
+		else if (array == null)
+			array = new Long[text.length];
 		for (int i = 0; i < Math.max(text.length, array.length); i++) {
 			Value v = new Value();
 			v.setType(DataType.SEMANTIC_STRING);
@@ -226,16 +278,24 @@ public class SemanticHelper {
 			if (array[i] != null) {
 				it.unitn.disi.sweb.webapi.model.ss.Concept concept = null;
 				try {
-					concept = client.readConceptByGlobalId(array[i], eb.getKbLabel());
+					concept = client.readConceptByGlobalId(array[i],
+							eb.getKbLabel());
 				} catch (Exception e) {
-					logger.error("Failed to find concept with id "+array[i]+": "+e.getMessage());
+					logger.error("Failed to find concept with id " + array[i]
+							+ ": " + e.getMessage());
 				}
 				if (concept == null) {
-					logger.error("Failed to find concept with id "+array[i]+".");
+					logger.error("Failed to find concept with id " + array[i]
+							+ ".");
 					continue;
 				}
-				if (ss.getString() == null) ss.setString(concept.getLabel());
-				ss.setTokens(Arrays.asList(new Token[]{new Token(concept.getLabel(),concept.getLabel(),concept.getId(), Arrays.asList(new it.unitn.disi.sweb.webapi.model.ss.Concept[]{concept}))}));
+				if (ss.getString() == null)
+					ss.setString(concept.getLabel());
+				ss.setTokens(Arrays.asList(new Token[] { new Token(
+						concept.getLabel(),
+						concept.getLabel(),
+						concept.getId(),
+						Arrays.asList(new it.unitn.disi.sweb.webapi.model.ss.Concept[] { concept })) }));
 			}
 			v.setSemanticStringValue(ss);
 			valueList.add(v);
@@ -244,7 +304,8 @@ public class SemanticHelper {
 		return a;
 	}
 
-	private Attribute createTextAttribute(String aName, String[] values, EntityType et) {
+	private Attribute createTextAttribute(String aName, String[] values,
+			EntityType et) {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
 		a.setAttributeDefinition(et.getAttributeDefByName(aName));
@@ -257,27 +318,31 @@ public class SemanticHelper {
 		a.setValues(valueList);
 		return a;
 	}
-	
-	private EntityType getEntityType(SCWebApiClient client, EntityBase eb, String type) throws WebApiException {
-		EntityType et = cachedTypeMap .get(type);
+
+	private EntityType getEntityType(SCWebApiClient client, EntityBase eb,
+			String type) throws WebApiException {
+		EntityType et = cachedTypeMap.get(type);
 		if (et == null) {
 			et = client.readEntityType(type, eb.getKbLabel());
 			cachedTypeMap.put(type, et);
 		}
 		return et;
 	}
-	
-	public static List<Concept> getSuggestions(SCWebApiClient client, String prefix, int max) throws WebApiException {
+
+	public static List<Concept> getSuggestions(SCWebApiClient client,
+			String prefix, int max) throws WebApiException {
 		return getInstance(client).getSuggestions(prefix, max);
 	}
 
-	private List<Concept> getSuggestions(String prefix, int max) throws WebApiException {
+	private List<Concept> getSuggestions(String prefix, int max)
+			throws WebApiException {
 		synchronized (client) {
 			List<Word> list = client.readConceptsByWordPrefix(prefix, max);
 			if (list != null) {
 				List<Concept> result = new ArrayList<Concept>();
 				for (Word w : list) {
-					for (it.unitn.disi.sweb.webapi.model.ss.Concept c : w.getConcepts()) {
+					for (it.unitn.disi.sweb.webapi.model.ss.Concept c : w
+							.getConcepts()) {
 						Concept nc = new Concept();
 						nc.setName(w.getLemma());
 						nc.setDescription(c.getDescription());
@@ -292,31 +357,39 @@ public class SemanticHelper {
 		}
 	}
 
-	public static void unshareEntity(SCWebApiClient client, Long entityId, Long ownerId) throws WebApiException {
+	public static void unshareEntity(SCWebApiClient client, Long entityId,
+			Long ownerId) throws WebApiException {
 		getInstance(client).unshareEntity(entityId, ownerId);
 	}
-	
-	private void unshareEntity(Long entityId, Long ownerId) throws WebApiException {
+
+	private void unshareEntity(Long entityId, Long ownerId)
+			throws WebApiException {
 		synchronized (client) {
-			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
-			client.updateAssignments(entityId, Operation.READ, ownerId, clearSource(assignments));
+			LiveTopicSource assignments = client.readAssignments(entityId,
+					Operation.READ, ownerId);
+			client.updateAssignments(entityId, Operation.READ, ownerId,
+					clearSource(assignments));
 		}
 	}
 
-	public static void unshareEntityWith(SCWebApiClient client, Long entityId, Long ownerId, Long actorId) throws WebApiException {
+	public static void unshareEntityWith(SCWebApiClient client, Long entityId,
+			Long ownerId, Long actorId) throws WebApiException {
 		getInstance(client).unshareEntityWith(entityId, ownerId, actorId);
 	}
-	
-	private void unshareEntityWith(Long entityId, Long ownerId, Long actorId) throws WebApiException {
+
+	private void unshareEntityWith(Long entityId, Long ownerId, Long actorId)
+			throws WebApiException {
 		synchronized (client) {
-			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
+			LiveTopicSource assignments = client.readAssignments(entityId,
+					Operation.READ, ownerId);
 			if (assignments != null && assignments.getUserIds() != null) {
 				assignments.getUserIds().remove(actorId);
-				client.updateAssignments(entityId, Operation.READ, ownerId, assignments);
+				client.updateAssignments(entityId, Operation.READ, ownerId,
+						assignments);
 			}
 		}
 	}
-	
+
 	private LiveTopicSource clearSource(LiveTopicSource src) {
 		src.setAllCommunities(false);
 		src.setAllKnownCommunities(false);
@@ -330,11 +403,13 @@ public class SemanticHelper {
 		return src;
 	}
 
-	public static void shareEntity(SCWebApiClient client, Long entityId, Long ownerId, ShareVisibility visibility) throws WebApiException {
+	public static void shareEntity(SCWebApiClient client, Long entityId,
+			Long ownerId, ShareVisibility visibility) throws WebApiException {
 		getInstance(client).shareEntity(entityId, ownerId, visibility);
 	}
-	
-	private void shareEntity(Long entityId, Long ownerId, ShareVisibility visibility) throws WebApiException {
+
+	private void shareEntity(Long entityId, Long ownerId,
+			ShareVisibility visibility) throws WebApiException {
 		synchronized (client) {
 			LiveTopicSource assignments = client.readAssignments(entityId,
 					Operation.READ, ownerId);
@@ -343,13 +418,16 @@ public class SemanticHelper {
 		}
 	}
 
-	public static void shareEntityWith(SCWebApiClient client, Long entityId, Long ownerId, Long actorId) throws WebApiException {
+	public static void shareEntityWith(SCWebApiClient client, Long entityId,
+			Long ownerId, Long actorId) throws WebApiException {
 		getInstance(client).shareEntityWith(entityId, ownerId, actorId);
 	}
-	
-	private void shareEntityWith(Long entityId, Long ownerId, Long actorId) throws WebApiException {
+
+	private void shareEntityWith(Long entityId, Long ownerId, Long actorId)
+			throws WebApiException {
 		synchronized (client) {
-			LiveTopicSource assignments = client.readAssignments(entityId, Operation.READ, ownerId);
+			LiveTopicSource assignments = client.readAssignments(entityId,
+					Operation.READ, ownerId);
 			if (assignments != null) {
 				if (assignments.getUserIds() == null) {
 					assignments.setUserIds(new HashSet<Long>());
@@ -357,7 +435,8 @@ public class SemanticHelper {
 				assignments.getUserIds().add(actorId);
 			}
 
-			client.updateAssignments(entityId, Operation.READ, ownerId, assignments);
+			client.updateAssignments(entityId, Operation.READ, ownerId,
+					assignments);
 		}
 	}
 
@@ -365,6 +444,7 @@ public class SemanticHelper {
 		src.setAllCommunities(sv.isAllCommunities());
 		src.setAllKnownCommunities(sv.isAllKnownCommunities());
 		src.setAllKnownUsers(sv.isAllKnownUsers());
+		src.setAllUsers(sv.isAllUsers());
 		if (sv.getGroupIds() != null) {
 			for (Long id : sv.getGroupIds()) {
 				if (!src.getGroupIds().contains(id)) {
