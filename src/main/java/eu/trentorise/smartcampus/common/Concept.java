@@ -6,7 +6,6 @@ public class Concept {
 	private String name;
 	private String description;
 	private String summary;
-	private String keyword;
 
 	public Concept(Long id, String name) {
 		super();
@@ -48,13 +47,4 @@ public class Concept {
 	public void setSummary(String summary) {
 		this.summary = summary;
 	}
-
-	public String getKeyword() {
-		return keyword;
-	}
-
-	public void setKeyword(String keyword) {
-		this.keyword = keyword;
-	}
-
 }
