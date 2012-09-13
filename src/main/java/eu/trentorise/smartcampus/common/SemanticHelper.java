@@ -11,6 +11,7 @@ import it.unitn.disi.sweb.webapi.model.entity.Value;
 import it.unitn.disi.sweb.webapi.model.smartcampus.ac.Operation;
 import it.unitn.disi.sweb.webapi.model.smartcampus.livetopics.LiveTopicSource;
 import it.unitn.disi.sweb.webapi.model.smartcampus.social.Community;
+import it.unitn.disi.sweb.webapi.model.smartcampus.social.User;
 import it.unitn.disi.sweb.webapi.model.ss.SemanticString;
 import it.unitn.disi.sweb.webapi.model.ss.Token;
 import it.unitn.disi.sweb.webapi.model.ss.Word;
@@ -86,12 +87,18 @@ public class SemanticHelper {
 			throws WebApiException {
 		if (actorId == scCommunityActorId)
 			return scCommunityEntityBase;
-		Entity actor = client.readEntity(actorId, null);
+		User actor = client.readUser(actorId);
+
 		if (actor == null) {
 			throw new WebApiException("Actor with id " + actorId
 					+ " is not found.");
 		}
-		return actor.getEntityBase();
+		Long ebid = actor.getEntityBaseId();
+		if (ebid == null) {
+			throw new WebApiException("Actor with id " + actorId
+					+ " has null entitybase reference");
+		}
+		return client.readEntityBase(ebid);
 	}
 
 	public static Entity createSCEntity(SCWebApiClient client, String type,
