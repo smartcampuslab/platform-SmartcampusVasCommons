@@ -477,4 +477,13 @@ public class SemanticHelper {
 		return src;
 	}
 
+	public static boolean isEntitySharedWithUser(SCWebApiClient client, Long entityId, long actorId) throws WebApiException {
+		return getInstance(client).isEntitySharedWithUser(entityId, actorId);
+	}
+
+	private boolean isEntitySharedWithUser(Long entityId, long actorId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
