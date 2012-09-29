@@ -481,9 +481,8 @@ public class SemanticHelper {
 		return getInstance(client).isEntitySharedWithUser(entityId, actorId);
 	}
 
-	private boolean isEntitySharedWithUser(Long entityId, long actorId) {
-		// TODO Auto-generated method stub
-		return false;
+	private boolean isEntitySharedWithUser(Long entityId, long actorId) throws WebApiException {
+		return client.readPermission(actorId, entityId, Operation.READ);
 	}
 
 }
