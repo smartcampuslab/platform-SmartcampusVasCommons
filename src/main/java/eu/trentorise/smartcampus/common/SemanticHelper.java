@@ -17,7 +17,6 @@ import it.unitn.disi.sweb.webapi.model.ss.Token;
 import it.unitn.disi.sweb.webapi.model.ss.Word;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -205,16 +204,16 @@ public class SemanticHelper {
 			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
 					new String[] { description }, null, entity.getEtype(),
 					entity.getEntityBase());
-			attrs.add(a);
+			if (a != null) attrs.add(a);
 		}
 		List<String> textTags = new ArrayList<String>();
-		List<Long> semanticTags = new ArrayList<Long>();
+		List<Concept> semanticTags = new ArrayList<Concept>();
 		if (concepts != null) {
 			for (Concept c : concepts) {
 				if (c.getId() == null || c.getId() <= 0)
 					textTags.add(c.getName());
 				else
-					semanticTags.add(c.getId());
+					semanticTags.add(c);
 			}
 		}
 		// text tags attribute
@@ -226,9 +225,9 @@ public class SemanticHelper {
 		// semantic tags attribute
 		if (!semanticTags.isEmpty()) {
 			Attribute a = createSemanticAttribute(client, ATTR_SEMANTIC_TAG,
-					null, semanticTags.toArray(new Long[semanticTags.size()]),
+					null, semanticTags.toArray(new Concept[semanticTags.size()]),
 					entity.getEtype(), entity.getEntityBase());
-			attrs.add(a);
+			if (a != null) attrs.add(a);
 		}
 		if (relations != null && relations.size() > 0) {
 			attrs.add(createRelationAttribute(client, ATTR_RELATION,
@@ -264,7 +263,7 @@ public class SemanticHelper {
 	}
 
 	private Attribute createSemanticAttribute(SCWebApiClient client,
-			String aName, String[] text, Long[] array, EntityType et,
+			String aName, String[] text, Concept[] array, EntityType et,
 			EntityBase eb) throws WebApiException {
 		List<Value> valueList = new ArrayList<Value>();
 		Attribute a = new Attribute();
@@ -274,7 +273,7 @@ public class SemanticHelper {
 		if (text == null)
 			text = new String[array.length];
 		else if (array == null)
-			array = new Long[text.length];
+			array = new Concept[text.length];
 		for (int i = 0; i < Math.max(text.length, array.length); i++) {
 			Value v = new Value();
 			v.setType(DataType.SEMANTIC_STRING);
@@ -285,10 +284,9 @@ public class SemanticHelper {
 			if (array[i] != null) {
 				it.unitn.disi.sweb.webapi.model.ss.Concept concept = null;
 				try {
-					concept = client.readConceptByGlobalId(array[i],
-							eb.getKbLabel());
+					concept = client.readConcept(array[i].getId());
 				} catch (Exception e) {
-					logger.error("Failed to find concept with id " + array[i]
+					logger.error("Exception looking for concept with id " + array[i]
 							+ ": " + e.getMessage());
 				}
 				if (concept == null) {
@@ -296,19 +294,26 @@ public class SemanticHelper {
 							+ ".");
 					continue;
 				}
+				String token = array[i].getName();
+				if (token == null) {
+					logger.warn("Token for tag concept "+concept.getId()+" is not specified!");
+					token = concept.getLabel();
+				}
+				
 				if (ss.getString() == null)
-					ss.setString(concept.getLabel());
-				ss.setTokens(Arrays.asList(new Token[] { new Token(
-						concept.getLabel(),
-						concept.getLabel(),
-						concept.getId(),
-						Arrays.asList(new it.unitn.disi.sweb.webapi.model.ss.Concept[] { concept })) }));
+					ss.setString(token);
+				ss.setTokens(Collections.singletonList(
+						new Token(token, concept.getLabel(), concept.getId(), Collections.singletonList(concept)) 
+					));
 			}
 			v.setSemanticStringValue(ss);
 			valueList.add(v);
 		}
-		a.setValues(valueList);
-		return a;
+		if (!valueList.isEmpty()) {
+			a.setValues(valueList);
+			return a;
+		}
+		return null;
 	}
 
 	private Attribute createTextAttribute(String aName, String[] values,
