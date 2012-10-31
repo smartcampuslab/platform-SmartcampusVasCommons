@@ -204,7 +204,8 @@ public class SemanticHelper {
 			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
 					new String[] { description }, null, entity.getEtype(),
 					entity.getEntityBase());
-			if (a != null) attrs.add(a);
+			if (a != null)
+				attrs.add(a);
 		}
 		List<String> textTags = new ArrayList<String>();
 		List<Concept> semanticTags = new ArrayList<Concept>();
@@ -225,9 +226,11 @@ public class SemanticHelper {
 		// semantic tags attribute
 		if (!semanticTags.isEmpty()) {
 			Attribute a = createSemanticAttribute(client, ATTR_SEMANTIC_TAG,
-					null, semanticTags.toArray(new Concept[semanticTags.size()]),
+					null,
+					semanticTags.toArray(new Concept[semanticTags.size()]),
 					entity.getEtype(), entity.getEntityBase());
-			if (a != null) attrs.add(a);
+			if (a != null)
+				attrs.add(a);
 		}
 		if (relations != null && relations.size() > 0) {
 			attrs.add(createRelationAttribute(client, ATTR_RELATION,
@@ -286,8 +289,8 @@ public class SemanticHelper {
 				try {
 					concept = client.readConcept(array[i].getId());
 				} catch (Exception e) {
-					logger.error("Exception looking for concept with id " + array[i]
-							+ ": " + e.getMessage());
+					logger.error("Exception looking for concept with id "
+							+ array[i] + ": " + e.getMessage());
 				}
 				if (concept == null) {
 					logger.error("Failed to find concept with id " + array[i]
@@ -296,15 +299,16 @@ public class SemanticHelper {
 				}
 				String token = array[i].getName();
 				if (token == null) {
-					logger.warn("Token for tag concept "+concept.getId()+" is not specified!");
+					logger.warn("Token for tag concept " + concept.getId()
+							+ " is not specified!");
 					token = concept.getLabel();
 				}
-				
+
 				if (ss.getString() == null)
 					ss.setString(token);
-				ss.setTokens(Collections.singletonList(
-						new Token(token, concept.getLabel(), concept.getId(), Collections.singletonList(concept)) 
-					));
+				ss.setTokens(Collections.singletonList(new Token(token, concept
+						.getLabel(), concept.getId(), Collections
+						.singletonList(concept))));
 			}
 			v.setSemanticStringValue(ss);
 			valueList.add(v);
@@ -463,6 +467,8 @@ public class SemanticHelper {
 					src.getGroupIds().add(id);
 				}
 			}
+		} else {
+			src.setGroupIds(null);
 		}
 		if (sv.getCommunityIds() != null) {
 			for (Long id : sv.getCommunityIds()) {
@@ -470,6 +476,8 @@ public class SemanticHelper {
 					src.getCommunityIds().add(id);
 				}
 			}
+		} else {
+			src.setCommunityIds(null);
 		}
 		if (sv.getUserIds() != null) {
 			for (Long id : sv.getUserIds()) {
@@ -477,16 +485,20 @@ public class SemanticHelper {
 					src.getUserIds().add(id);
 				}
 			}
+		} else {
+			src.setUserIds(null);
 		}
 
 		return src;
 	}
 
-	public static boolean isEntitySharedWithUser(SCWebApiClient client, Long entityId, long actorId) throws WebApiException {
+	public static boolean isEntitySharedWithUser(SCWebApiClient client,
+			Long entityId, long actorId) throws WebApiException {
 		return getInstance(client).isEntitySharedWithUser(entityId, actorId);
 	}
 
-	private boolean isEntitySharedWithUser(Long entityId, long actorId) throws WebApiException {
+	private boolean isEntitySharedWithUser(Long entityId, long actorId)
+			throws WebApiException {
 		return client.readPermission(actorId, entityId, Operation.READ);
 	}
 
