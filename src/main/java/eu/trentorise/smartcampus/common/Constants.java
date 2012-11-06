@@ -13,5 +13,6 @@ public class Constants {
 	public static final String ENTTIY_TYPE_EXPERIENCE = "experience";
 	public static final String ENTTIY_TYPE_FILE = "computer file";
 	public static final String ENTTIY_TYPE_JOURNEY = "journey";
+	public static final String ENTTIY_TYPE_STORY = "narrative";
 
 }
