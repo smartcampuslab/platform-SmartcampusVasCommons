@@ -5,13 +5,13 @@
   <version>1.0</version>
 
     <properties>
-        <semantic-webapi>2.6.0-FINAL</semantic-webapi>
+        <semantic-webapi>1.0-FINAL</semantic-webapi>
     </properties>
   
     <dependencies>
         <dependency>
             <groupId>it.unitn.disi.sweb</groupId>
-            <artifactId>smartcampus-webapi-client</artifactId>
+            <artifactId>social-webapi-client</artifactId>
             <version>${semantic-webapi}</version>
         </dependency>
         <dependency>
