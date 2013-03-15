@@ -2,10 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.trentorise.smartcampus</groupId>
   <artifactId>smartcampus.vas.commons</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
 
     <properties>
-        <semantic-webapi>1.0-FINAL</semantic-webapi>
+        <semantic-webapi>1.1-FINAL</semantic-webapi>
     </properties>
   
     <dependencies>

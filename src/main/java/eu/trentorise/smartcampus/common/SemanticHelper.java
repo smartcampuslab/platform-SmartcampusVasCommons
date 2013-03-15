@@ -216,13 +216,15 @@ public class SemanticHelper {
 					entity.getEtype()));
 		}
 		// description attribute
-		if (description != null) {
-			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
-					new String[] { description }, null, entity.getEtype(),
-					entity.getEntityBase());
-			if (a != null)
-				attrs.add(a);
-		}
+//		if (description != null) {
+//			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
+//					new String[] { description }, null, entity.getEtype(),
+//					entity.getEntityBase());
+////			Attribute a = createTextAttribute(ATTR_DESCRIPTION,
+////					new String[] { description }, entity.getEtype());
+//			if (a != null)
+//				attrs.add(a);
+//		}
 		List<String> textTags = new ArrayList<String>();
 		List<Concept> semanticTags = new ArrayList<Concept>();
 		if (concepts != null) {
@@ -477,6 +479,8 @@ public class SemanticHelper {
 		src.setAllKnownCommunities(sv.isAllKnownCommunities());
 		src.setAllKnownUsers(sv.isAllKnownUsers());
 		src.setAllUsers(sv.isAllUsers());
+		src.getGroupIds().clear();
+		src.getUserIds().clear();
 		if (sv.getGroupIds() != null) {
 			for (Long id : sv.getGroupIds()) {
 				if (!src.getGroupIds().contains(id)) {
