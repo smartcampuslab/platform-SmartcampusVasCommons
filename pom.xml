@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.trentorise.smartcampus</groupId>
 	<artifactId>smartcampus.vas.commons</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 
 	<properties>
 		<semantic-webapi>1.1-FINAL</semantic-webapi>
@@ -68,12 +68,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-expression</artifactId>
 			<version>${spring-version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>eu.trentorise.smartcampus</groupId>
-			<artifactId>ac-service-provider-filter</artifactId>
-			<version>1.1</version>
 		</dependency>
 	</dependencies>
 
