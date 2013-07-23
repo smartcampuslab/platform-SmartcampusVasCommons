@@ -29,9 +29,7 @@ import it.unitn.disi.sweb.webapi.model.smartcampus.livetopics.LiveTopicSubject;
 import it.unitn.disi.sweb.webapi.model.smartcampus.social.User;
 import it.unitn.disi.sweb.webapi.model.ss.Word;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -46,8 +44,8 @@ import org.json.JSONException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import eu.trentorise.smartcampus.common.Concept;
 import eu.trentorise.smartcampus.common.SemanticHelper;
+import eu.trentorise.smartcampus.social.model.Concept;
 
 public class TestSemanticHelper {
 
@@ -89,7 +87,7 @@ public class TestSemanticHelper {
 		textTag.setName("java text");
 		Concept semTag = new Concept();
 		Word word = client.readConceptsByWordPrefix("java", 1).get(0);
-		semTag.setId(word.getConcepts().get(0).getGlobalId());
+		semTag.setId(word.getConcepts().get(0).getGlobalId().toString());
 		semTag.setName(word.getConcepts().get(0).getLabel());
 		
 		Entity e = SemanticHelper.createSCEntity(client, "event", "some event", "text description", Arrays.asList(new Concept[]{textTag, semTag}), null);

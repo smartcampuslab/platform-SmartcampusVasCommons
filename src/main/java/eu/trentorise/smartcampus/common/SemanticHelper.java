@@ -42,6 +42,10 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import eu.trentorise.smartcampus.social.model.Concept;
+import eu.trentorise.smartcampus.social.model.Constants;
+import eu.trentorise.smartcampus.social.model.ShareVisibility;
+
 public class SemanticHelper {
 
 	private static final String ATTR_NAME = "name";
@@ -229,7 +233,7 @@ public class SemanticHelper {
 		List<Concept> semanticTags = new ArrayList<Concept>();
 		if (concepts != null) {
 			for (Concept c : concepts) {
-				if (c.getId() == null || c.getId() <= 0)
+				if (c.getId() == null || c.getId().equals("-1"))
 					textTags.add(c.getName());
 				else
 					semanticTags.add(c);
@@ -305,7 +309,7 @@ public class SemanticHelper {
 			if (array[i] != null) {
 				it.unitn.disi.sweb.webapi.model.ss.Concept concept = null;
 				try {
-					concept = client.readConcept(array[i].getId());
+					concept = client.readConcept(Long.parseLong(array[i].getId()));
 				} catch (Exception e) {
 					logger.error("Exception looking for concept with id "
 							+ array[i] + ": " + e.getMessage());
@@ -381,7 +385,7 @@ public class SemanticHelper {
 						nc.setName(w.getLemma());
 						nc.setDescription(c.getDescription());
 						nc.setSummary(c.getSummary());
-						nc.setId(c.getId());
+						nc.setId(c.getId().toString());
 						result.add(nc);
 					}
 				}
@@ -482,7 +486,8 @@ public class SemanticHelper {
 		src.getGroupIds().clear();
 		src.getUserIds().clear();
 		if (sv.getGroupIds() != null) {
-			for (Long id : sv.getGroupIds()) {
+			for (String sid : sv.getGroupIds()) {
+				Long id = Long.parseLong(sid);
 				if (!src.getGroupIds().contains(id)) {
 					src.getGroupIds().add(id);
 				}
@@ -491,7 +496,8 @@ public class SemanticHelper {
 			src.setGroupIds(null);
 		}
 		if (sv.getCommunityIds() != null) {
-			for (Long id : sv.getCommunityIds()) {
+			for (String sid : sv.getCommunityIds()) {
+				Long id = Long.parseLong(sid);
 				if (!src.getCommunityIds().contains(id)) {
 					src.getCommunityIds().add(id);
 				}
@@ -500,7 +506,8 @@ public class SemanticHelper {
 			src.setCommunityIds(null);
 		}
 		if (sv.getUserIds() != null) {
-			for (Long id : sv.getUserIds()) {
+			for (String sid : sv.getUserIds()) {
+				Long id = Long.parseLong(sid);
 				if (!src.getUserIds().contains(id)) {
 					src.getUserIds().add(id);
 				}
