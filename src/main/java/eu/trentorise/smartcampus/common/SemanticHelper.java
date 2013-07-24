@@ -108,11 +108,14 @@ public class SemanticHelper {
 			return scCommunityEntityBase;
 		User actor = client.readUser(actorId);
 
+		Long ebid = null;
 		if (actor == null) {
-			throw new WebApiException("Actor with id " + actorId
-					+ " is not found.");
+			Community comm = client.readCommunity(actorId);
+			if (comm == null) throw new WebApiException("Actor with id " + actorId + " is not found.");
+			ebid = comm.getEntityBaseId();
+		} else {
+			ebid = actor.getEntityBaseId();
 		}
-		Long ebid = actor.getEntityBaseId();
 		if (ebid == null) {
 			throw new WebApiException("Actor with id " + actorId
 					+ " has null entitybase reference");
@@ -220,15 +223,15 @@ public class SemanticHelper {
 					entity.getEtype()));
 		}
 		// description attribute
-//		if (description != null) {
+		if (description != null) {
 //			Attribute a = createSemanticAttribute(client, ATTR_DESCRIPTION,
 //					new String[] { description }, null, entity.getEtype(),
 //					entity.getEntityBase());
-////			Attribute a = createTextAttribute(ATTR_DESCRIPTION,
-////					new String[] { description }, entity.getEtype());
-//			if (a != null)
-//				attrs.add(a);
-//		}
+			Attribute a = createTextAttribute(ATTR_DESCRIPTION,
+					new String[] { description }, entity.getEtype());
+			if (a != null)
+				attrs.add(a);
+		}
 		List<String> textTags = new ArrayList<String>();
 		List<Concept> semanticTags = new ArrayList<Concept>();
 		if (concepts != null) {
